@@ -7,6 +7,7 @@
 # add_subdirectory(socket)
 add_executable(main 
     main.cpp
+    socket/HttpListener.cpp socket/HttpSession.cpp socket/HttpStarter.cpp
 )
 # 
  
