@@ -5,6 +5,11 @@
 #include "domain/Post.hpp"
 #include "domain/Comment.hpp"
 
+#include "storage/CommentStorage.hpp"
+
+#include "utils/DBConnection.hpp"
+#include "utils/Singleton.hpp"
+
 namespace storage
 {
     class PostStorage
@@ -13,30 +18,30 @@ namespace storage
 
         /// @brief  게시글 DB에 추가
         /// @param post 추가하고자 하는 DB
-        /// @return 0:성공 others:실패
+        /// @return 0:성공 1:ODBC error 2:Binding error 3: Query Execution Error
         virtual int insert_post(domain::Post post)=0;
 
         /// @brief 게시글 리스트 가져오기
         /// @param post 가져오고자 하는 게시글 벡터
-        /// @return 0:성공 others:실패
+        /// @return 0:성공 1:ODBC error 2:Binding error 3: Query Execution Error 4: Fetch Error
         virtual int get_postlist(std::vector<domain::Post>* post)=0;
 
         /// @brief 게시글 id를 이용 게시글 가져옴
         /// @param post 가져오고자하는 게시글
         /// @param comment 게시글의 댓글
         /// @param id 게시글 id
-        /// @return 0:성공 others:실패
+        /// @return 0:성공 1:ODBC error 2:Binding error 3: Query Execution Error 4: Fetch Error 5: no such data
         virtual int get_post_byid(domain::Post* post, std::vector<domain::Comment>* comment, uint32_t id)=0;
         
         /// @brief 게시글 수정
         /// @param post 수정하고자 하는 게시글
         /// @param id 수정하고자 하는 게시글 id
-        /// @return 0:성공 others:실패
+        /// @return 0:성공 1:ODBC error 2:Binding error 3: Query Execution Error
         virtual int modify_post(domain::Post post, uint32_t id)=0;
 
         /// @brief 게시글 삭제
         /// @param id 삭제하고자 하는 게시글 id
-        /// @return 0:성공 others:실패
+        /// @return 0:성공 1:ODBC error 2:Binding error 3: Query Execution Error
         virtual int delete_post(uint32_t id)=0;
 
         /// @brief 저장한 파일경로 DB에 추가
@@ -52,6 +57,24 @@ namespace storage
         /// @param filename 파일 이름
         /// @return 0:성공 others:실패
         virtual int get_filepath(std::string* path, uint32_t post_id, std::string filename)=0;
+    };
+
+    class PostStorageODBC : public PostStorage, public utils::Singleton<PostStorageODBC>
+    {
+    private:
+        utils::DBConnection* connectionPool;
+        CommentStorage* commentStorage;
+
+        PostStorageODBC();
+        friend class utils::Singleton<PostStorageODBC>;
+    public:
+        int insert_post(domain::Post post);
+        int get_postlist(std::vector<domain::Post>* post);
+        int get_post_byid(domain::Post* post, std::vector<domain::Comment>* comment, uint32_t id);
+        int modify_post(domain::Post post, uint32_t id);
+        int delete_post(uint32_t id);
+        int insert_filepath(uint32_t post_id, std::string filename, std::string file_path);
+        int get_filepath(std::string* path, uint32_t post_id, std::string filename);
     };
     
 } // namespace storage
