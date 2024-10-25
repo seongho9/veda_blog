@@ -3,11 +3,15 @@
 #include <string>
 #include <domain/User.hpp>
 
+#include "utils/Singleton.hpp"
+
+#include "storage/UserStorage.hpp"
+#include "logic/SessinoLogic.hpp"
+
 namespace logic
 {
     class UserLogic
     {
-
     public:
         /// @brief 로그인 로직
         /// @param id 아이디
@@ -31,6 +35,22 @@ namespace logic
         /// @param user 유저 객체
         /// @return 0:성공 others:실패
         virtual int delete_user(domain::User user) = 0;
+    };
+
+    class UserLogicImpl : public UserLogic, public utils::Singleton<UserLogicImpl>
+    {
+    private:
+        storage::UserStorage* _user_storage;
+        SessionLogic* _session_logic;
+        
+        friend class utils::Singleton<UserLogicImpl>;
+        UserLogicImpl();
+    public:
+        int login(std::string id, std::string password, std::string* token) override;
+        int logout(std::string id, std::string token) override;
+        int register_user(domain::User user) override;
+        int delete_user(domain::User user) override;
+        
     };
 }
 #endif
