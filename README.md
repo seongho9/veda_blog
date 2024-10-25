@@ -2,7 +2,7 @@
 VEDA 교육과정: Blog
 
 ## Documents
-(Draw.io)[https://drive.google.com/file/d/1qcmvJhSq0EwzxH5kEBrYKewDwd5_CcdV/view?usp=sharing]
+[Draw.io](https://drive.google.com/file/d/1qcmvJhSq0EwzxH5kEBrYKewDwd5_CcdV/view?usp=sharing)
 ## Required Libraries
 - Boost 1.75.0
 - GTest
