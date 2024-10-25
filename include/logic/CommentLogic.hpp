@@ -5,6 +5,11 @@
 #include "domain/Post.hpp"
 #include "domain/User.hpp"
 
+#include "utils/Singleton.hpp"
+
+#include "storage/CommentStorage.hpp"
+
+#include "logic/SessinoLogic.hpp"
 #include <string>
 #include <vector>
 
@@ -27,13 +32,29 @@ namespace logic
         /// @param id 댓글 id
         /// @param token 유저 식별을 위한 토큰
         /// @return 0:성공 others:실패
-        virtual int delete_comment(uint64_t id, std::string token) = 0;
+        virtual int delete_comment(uint32_t id, std::string token) = 0;
         /// @brief 포스트의 댓글을 가져옴
         /// @param comment 값을 받아오는 댓글 벡터 객체
         /// @param postid 해당 게시글의 id
         /// @param token 유저 식별을 위한 토큰
         /// @return 0:성공 others:실패
-        virtual int get_commentlist(std::vector<domain::Comment>* comment, uint32_t postid, std::string token);
+        virtual int get_commentlist(std::vector<domain::Comment>* comment, uint32_t postid, std::string token)=0;
     };
+
+    class CommentLogicImpl:public CommentLogic, public utils::Singleton<CommentLogicImpl>
+    {
+    private:
+        friend class utils::Singleton<CommentLogicImpl>;
+        storage::CommentStorage * _comment_storage;
+        SessionLogic* _session_logic;
+
+    public:
+        CommentLogicImpl();
+        int add_comment(domain::Comment comment, std::string token);
+        int modify_comment(domain::Comment comment, std::string token);
+        int delete_comment(uint32_t id, std::string token);
+        int get_commentlist(std::vector<domain::Comment>* comment, uint32_t postid, std::string token);
+    };
+
 }
 #endif
