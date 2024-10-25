@@ -1,6 +1,9 @@
 #include "utils/DBConnection.hpp"
 #include "spdlog/spdlog.h"
 
+#include <string>
+#include <sstream>
+
 using namespace std;
 using namespace utils;
 
@@ -120,38 +123,68 @@ int DBConnection::prepareStatement(std::string query, SQLHDBC connection, SQLHST
     retcode = SQLPrepare(*stmt, (SQLCHAR*)query.c_str(), SQL_NTS);
     if(retcode !=SQL_SUCCESS && retcode != SQL_SUCCESS_WITH_INFO) {
         spdlog::error("query statement allocation error");
+        checkError(retcode, stmt, SQL_HANDLE_STMT);
         return -2;
     }
 
     return 0;
 }
-void DBConnection::checkSchema(string schema, string create_query)
+void DBConnection::checkSchema()
 {
-    SQLHDBC connection = getConnection();
+    SQLHDBC conn = getConnection();
     SQLHSTMT stmt;
-    SQLRETURN retcode;
-    string query = "SELECT * FROM ";
 
-    query.append(schema);
-
-    if(prepareStatement(query, connection, &stmt) != 0){
-        SQLFreeHandle(SQL_HANDLE_STMT, stmt);
-        releaseConnection(connection);
-        return;
-    }
-
-    retcode = SQLExecute(stmt);
-
-    if(retcode !=SQL_SUCCESS && retcode !=SQL_SUCCESS_WITH_INFO) {
-        SQLFreeHandle(SQL_HANDLE_STMT, stmt);
-        if(prepareStatement(create_query, connection, &stmt) != 0){
-            SQLFreeHandle(SQL_HANDLE_STMT, stmt);
-            releaseConnection(connection);
-            return;
-        }
-        SQLExecute(stmt);
-    }
+    stringstream file_stream;
+        file_stream << "CREATE TABLE FILE(";
+        file_stream << " id INTEGER PRIMARY KEY AUTOINCREMENT,";
+        file_stream << " path TEXT NOT NULL,";
+        file_stream << " post_id INTEGER NOT NULL,";
+        file_stream << " name TEXT NOT NULL,";
+        file_stream << " FOREIGN KEY (post_id) REFERENCES POST(id))";
+    prepareStatement(file_stream.str(), conn, &stmt);
+    SQLExecute(stmt);
     SQLFreeHandle(SQL_HANDLE_STMT, stmt);
-    releaseConnection(connection);
+
+    stringstream comment_stream;
+        comment_stream << "CREATE TABLE COMMENT(";
+        comment_stream << " id INTEGER PRIMARY KEY AUTOINCREMENT,";
+        comment_stream << " user_id TEXT NOT NULL,";
+        comment_stream << " post_id INTEGER NOT NULL,";
+        comment_stream << " content TEXT NOT NULL,";
+        comment_stream << " create_date INTEGER NOT NULL,";
+        comment_stream << " update_date INTEGER NOT NULL,";
+        comment_stream << " is_valid INTEGER NOT NULL,";
+        comment_stream << " FOREIGN KEY (user_id) REFERENCES USER(id)";
+        comment_stream << " FOREIGN KEY (post_id) REFERENCES POST(id))";
+    prepareStatement(comment_stream.str(), conn, &stmt);
+    SQLExecute(stmt);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+
+    stringstream post_stream;
+        post_stream << "CREATE TABLE POST(";
+        post_stream << " id INTEGER PRIMARY KEY AUTOINCREMENT,";
+        post_stream << " user_id TEXT NOT NULL,";
+        post_stream << " title TEXT NOT NULL,";
+        post_stream << " content TEXT NOT NULL,";
+        post_stream << " create_date INTEGER NOT NULL,";
+        post_stream << " update_date INTEGER NOT NULL,";
+        post_stream << " is_valid INTEGER NOT NULL,";
+        post_stream << " FOREIGN KEY (user_id) REFERENCES USER(id))";
+    prepareStatement(post_stream.str(), conn, &stmt);
+    SQLExecute(stmt);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    
+    stringstream user_stream;
+        user_stream << "CREATE TABLE USER( ";
+        user_stream << "id TEXT NOT NULL PRIMARY KEY, ";
+        user_stream << "password TEXT NOT NULL, ";
+        user_stream << "nickname TEXT NOT NULL, ";
+        user_stream << "is_valid INTEGER NOT NULL, ";
+        user_stream << "is_manager INTEGER NOT NULL)";
+    prepareStatement(user_stream.str(), conn, &stmt);
+    SQLExecute(stmt);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+
+    releaseConnection(conn);
 
 }

@@ -32,7 +32,7 @@ namespace utils
         int checkError(SQLRETURN retcode, SQLHANDLE handle, SQLSMALLINT handle_type);
 
         int prepareStatement(std::string query, SQLHDBC connection, SQLHSTMT* stmt);
-        void checkSchema(std::string schema, std::string create_query);
+        void checkSchema();
     };
 }
 #endif

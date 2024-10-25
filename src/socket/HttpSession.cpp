@@ -36,11 +36,9 @@ void HttpSession::handle_request()
 
     std::string path(_request.target());
     std::string method(_request.method_string());
-
     http::response<http::string_body> res;
-
-    auto it = _handler.find(path);
-    spdlog::info("{} {}", method, path);
+    spdlog::debug("{}", path.substr(0, path.find('?')));
+    auto it = _handler.find(path.substr(0, path.find('?')));
     if(it != _handler.end()){
         it->second(_request, res);
     } else {

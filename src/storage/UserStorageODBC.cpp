@@ -76,7 +76,7 @@ int UserStorageODBC::find_user_byid(domain::User* user, string userid)
     SQLHSTMT stmt;
     SQLRETURN retcode;
     SQLHDBC connection = connectionPool->getConnection();
-    string query = "SELECT * FROM USER WHERE id=?";
+    string query = "SELECT * FROM USER WHERE id=? AND is_valid=1";
 
     if(connectionPool->prepareStatement(query, connection, &stmt)){
         SQLFreeHandle(SQL_HANDLE_STMT, stmt);
@@ -177,8 +177,9 @@ int UserStorageODBC::get_post_byuser(vector<domain::Post>* post, string user_id)
     SQLHSTMT stmt;
     SQLRETURN retcode;
     SQLHDBC connection = connectionPool->getConnection();
-    string query = "SELECT id, author, title, create_time, update_time, is_valid FROM POST WHERE user_id=?";
+    string query = "SELECT id, user_id, title, create_date, update_date, is_valid FROM POST WHERE user_id=? AND is_valid=1";
     if(connectionPool->prepareStatement(query, connection, &stmt)){
+        
         SQLFreeHandle(SQL_HANDLE_STMT, stmt);
         connectionPool->releaseConnection(connection);
         return -1;
@@ -241,8 +242,9 @@ int UserStorageODBC::get_comment_byuser(vector<domain::Comment>* comment, string
     SQLHSTMT stmt;
     SQLRETURN retcode;
     SQLHDBC connection = connectionPool->getConnection();
-    string query = "SELECT id, post_id, create_date, update_date, content FROM COMMENT WHERE user_id=?";
+    string query = "SELECT id, post_id, create_date, update_date, content FROM COMMENT WHERE user_id=? AND is_valid=1";
     if(connectionPool->prepareStatement(query, connection, &stmt)){
+        spdlog::error("asdf");
         SQLFreeHandle(SQL_HANDLE_STMT, stmt);
         connectionPool->releaseConnection(connection);
         return -1;
@@ -268,7 +270,7 @@ int UserStorageODBC::get_comment_byuser(vector<domain::Comment>* comment, string
         SQLINTEGER id, post_id;
         SQLCHAR  content[256];
         SQLINTEGER create_time, update_time;
-        SQLINTEGER is_valid;
+        //SQLINTEGER is_valid;
         try{
         SQLGetData(stmt, 1, SQL_C_LONG, &id, sizeof(id), NULL);
         SQLGetData(stmt, 2, SQL_C_LONG, &post_id, sizeof(post_id), NULL);

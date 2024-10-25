@@ -164,7 +164,7 @@ int CommentStorageODBC::get_commentlist(vector<domain::Comment>* comment, uint32
     SQLHDBC connection = connectionPool->getConnection();
     spdlog::debug("post id {}", post_id);
 
-    string query = "SELECT id, post_id, user_id, content, create_date, update_date, is_valid FROM COMMENT WHERE post_id=?";
+    string query = "SELECT id, post_id, user_id, content, create_date, update_date, is_valid FROM COMMENT WHERE post_id=? AND is_valid=1";
     if(connectionPool->prepareStatement(query, connection, &stmt)){
         SQLFreeHandle(SQL_HANDLE_STMT, stmt);
         connectionPool->releaseConnection(connection);

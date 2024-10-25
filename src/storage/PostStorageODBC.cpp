@@ -61,6 +61,7 @@ int PostStorageODBC::insert_post(domain::Post post)
         return 2;
     }
     //  is_valid
+    int valid;
     retcode = SQLBindParameter(stmt, 6, SQL_PARAM_INPUT,
     SQL_C_BIT, SQL_INTEGER, 0, 0,
     &post.get_is_valid(), 0, NULL);

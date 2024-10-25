@@ -1,6 +1,6 @@
 # CMakeLists.txx
 cmake_minimum_required(VERSION 3.12)
-project(Japtang VERSION 0.1)
+project(VEDA_BLOG VERSION 0.1)
 cmake_policy(SET CMP0079 NEW)
 
 message(Boost 1.17.0 setup)
@@ -34,7 +34,8 @@ set ( CMAKE_CXX_FLAGS "-O1 -Wall" )
 set ( CMAKE_CXX_FLAGS_DEBUG "-O0 -g" ) 
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
+
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(test)
+
 message(${GTEST_BOTH_LIBRARIES})
-# target_link_libraries(${PROJECT_NAME} GTest)
