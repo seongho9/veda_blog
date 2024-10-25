@@ -5,6 +5,10 @@
 #include "domain/Comment.hpp"
 #include "domain/User.hpp"
 
+#include "utils/Singleton.hpp"
+#include "storage/PostStorage.hpp"
+#include "logic/SessinoLogic.hpp"
+
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -53,6 +57,22 @@ namespace logic
         /// @param token 회원 여부 확인을 위한 토큰
         /// @return 0:성공 others:실패
         virtual int get_file(std::string* file, uint32_t post_id, std::string file_name,  std::string token)=0;
+    };
+    class PostLogicImpl : public PostLogic, public utils::Singleton<PostLogicImpl>
+    {
+    private:
+        storage::PostStorage* _post_storage;
+        SessionLogic* _session_logic;
+        PostLogicImpl();
+        friend class utils::Singleton<PostLogicImpl>;
+
+    public:
+        int add_post(domain::Post post, const std::vector<std::string> files,  std::string token) override;
+        int delete_post(uint32_t id, std::string token) override;
+        int modify_post(domain::Post post, const std::vector<std::string> files,  std::string token) override;
+        int get_postlist(std::vector<domain::Post>* post) override;
+        int get_post(domain::Post* post, std::vector<domain::Comment>* comment, std::string token) override;
+        int get_file(std::string* file, uint32_t post_id, std::string file_name,  std::string token) override;
     };
 }
 #endif

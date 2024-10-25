@@ -5,6 +5,11 @@
 #include "domain/Post.hpp"
 #include "domain/User.hpp"
 
+#include "storage/UserStorage.hpp"
+#include "SessinoLogic.hpp"
+
+#include "utils/Singleton.hpp"
+
 #include <string>
 #include <vector>
 
@@ -31,6 +36,22 @@ namespace logic
         /// @param token 유저 식별을 위한 토큰
         /// @return 0:성공 others:실패
         virtual int get_userinfo(domain::User* user, std::string token) = 0;
+    };
+
+    class UserInfoLogicImpl : public UserInfoLogic, public utils::Singleton<UserInfoLogicImpl>
+    {
+    private:
+        storage::UserStorage* _user_storage;
+        SessionLogic* _session_logic;
+
+        friend class utils::Singleton<UserInfoLogicImpl>;
+        UserInfoLogicImpl();
+
+    public:
+        int get_postlist(std::vector<domain::Post>* post, std::string token);
+        int get_commentlist(std::vector<domain::Comment>* comment, std::string token);
+        int get_userinfo(domain::User* user, std::string token);
+        
     };
 }
 
