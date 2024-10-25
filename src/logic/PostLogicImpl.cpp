@@ -35,6 +35,13 @@ int PostLogicImpl::delete_post(uint32_t id, std::string token)
     if (_session_logic->verify_token(&user_id, token)) {
         return -1;
     }
+    domain::Post verify_post;
+    std::vector<domain::Comment> comm;
+
+    _post_storage->get_post_byid(&verify_post, &comm, id);
+    if(strcmp(verify_post.get_author().c_str(), user_id.c_str())){
+        return 9;
+    }
 
     int result = _post_storage->delete_post(id);
     if(result){

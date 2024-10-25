@@ -333,7 +333,7 @@ void HttpStarter::register_handler(std::unordered_map<std::string, http_handler_
                 post_tree.put("id", std::to_string(post.get_id()));
                 post_tree.put("author", post.get_author());
                 post_tree.put("title",post.get_title());
-                std::tm* tm_ptr = std::gmtime(&post.get_update_time());
+                std::tm* tm_ptr = std::localtime(&post.get_update_time());
                 std::stringstream ss;
                 ss<<std::put_time(tm_ptr, "%Y-%m-%d %H:%M");
                 post_tree.put("update_date", ss.str());
@@ -405,7 +405,7 @@ void HttpStarter::register_handler(std::unordered_map<std::string, http_handler_
                 post_tree.put("id", std::to_string(commenet.get_id()));
                 post_tree.put("author", commenet.get_author());
                 post_tree.put("title",commenet.get_content());
-                std::tm* tm_ptr = std::gmtime(&commenet.get_update_date());
+                std::tm* tm_ptr = std::localtime(&commenet.get_update_date());
                 std::stringstream ss;
                 ss<<std::put_time(tm_ptr, "%Y-%m-%d %H:%M");
                 post_tree.put("update_date", ss.str());
@@ -576,12 +576,20 @@ void HttpStarter::register_handler(std::unordered_map<std::string, http_handler_
 
             domain::Post post;
             uint32_t id = pt.get<uint32_t>("id");
-
+            spdlog::debug("id {}", id);
             int ret = post_logic->delete_post(id, token);
             if(ret==-1) {
                 pt.clear();
                 res.result(http::status::bad_request);
                 pt.put("message", "not login");
+                boost::property_tree::write_json(res_stream,pt);
+                res.body() = res_stream.str();
+                return;
+            }
+            else if(ret==9){
+                pt.clear();
+                res.result(http::status::bad_request);
+                pt.put("message", "reject");
                 boost::property_tree::write_json(res_stream,pt);
                 res.body() = res_stream.str();
                 return;
@@ -678,13 +686,14 @@ void HttpStarter::register_handler(std::unordered_map<std::string, http_handler_
             std::string path(req.target());
             std::string method(req.method_string());
 
-            spdlog::info("{} {}", method, path);
+            spdlog::info("handler {} {}", method, path);
+
             boost::property_tree::ptree pt;
-            
             std::stringstream res_stream;
 
             res.set(http::field::content_type, "application/json");
             if(req.method() != http::verb::get){
+                spdlog::info("bad request method");
                 pt.clear();
                 res.result(http::status::bad_request);
                 pt.put("message", "not exist path");
@@ -696,6 +705,7 @@ void HttpStarter::register_handler(std::unordered_map<std::string, http_handler_
             
             std::vector<domain::Post> post_list;
             int ret = post_logic->get_postlist(&post_list);
+            spdlog::debug("after get list");
             
             if(ret==-1) {
                 pt.clear();
@@ -713,23 +723,31 @@ void HttpStarter::register_handler(std::unordered_map<std::string, http_handler_
                 res.body() = res_stream.str();
                 return;
             }
+
             pt.clear();
             res.result(http::status::ok);
             boost::property_tree::ptree post_tree;
             for(auto& post: post_list){
+                spdlog::debug("{}", std::to_string(post.get_id()));
                 boost::property_tree::ptree post_element;
 
                 post_element.put("id", std::to_string(post.get_id()));
                 post_element.put("author", post.get_author().substr(0, post.get_author().find_first_of('\0')));
                 post_element.put("title",post.get_title().substr(0, post.get_title().find_first_of('\0')));
-                std::tm* tm_ptr = std::gmtime(&post.get_update_time());
+                std::tm* tm_ptr = std::localtime(&post.get_update_time());
                 std::stringstream ss;
                 ss<<std::put_time(tm_ptr, "%Y-%m-%d %H:%M");
                 post_element.put("update_date", ss.str());
 
                 post_tree.push_back({"", post_element});
             }
-            pt.add_child("posts", post_tree);
+
+            if(!post_tree.empty()){
+                pt.add_child("posts", post_tree);
+            }
+            else{
+                pt.put("posts","");
+            }
             boost::property_tree::write_json(res_stream,pt);
             res.body() = res_stream.str();
             return;
@@ -811,7 +829,7 @@ void HttpStarter::register_handler(std::unordered_map<std::string, http_handler_
             pt.put("author", post.get_author().substr(0, post.get_author().find_first_of('\0')));
             pt.put("title", post.get_title().substr(0, post.get_title().find_first_of('\0')));
             pt.put("content", post.get_content().substr(0, post.get_content().find_first_of('\0')));
-            std::tm* tm_ptr = std::gmtime(&post.get_update_time());
+            std::tm* tm_ptr = std::localtime(&post.get_update_time());
             std::stringstream ss;
             ss<<std::put_time(tm_ptr, "%Y-%m-%d %H:%M");
             pt.put("update_date", ss.str());
@@ -1065,7 +1083,7 @@ void HttpStarter::register_handler(std::unordered_map<std::string, http_handler_
             size_t start_pos = id_pos+8;
             size_t end_pos = query_param.find('&', start_pos);
             uint32_t id = static_cast<uint32_t>(std::stoul(query_param.substr(start_pos, end_pos)));
-
+            spdlog::debug("{}", id);
             std::vector<domain::Comment> comment_list;
 
             int ret = comment_logic->get_commentlist(&comment_list,id, token);

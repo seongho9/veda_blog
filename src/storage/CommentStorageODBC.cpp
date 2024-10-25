@@ -58,10 +58,9 @@ int CommentStorageODBC::insert_comment(uint32_t post_id, domain::Comment comment
         return 2;
     }
     //  is_valid
-    bool valid = comment.get_is_valid() ? 1:0;
     retcode = SQLBindParameter(stmt, 6, 
-        SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0,0,
-        &valid, 0, NULL);
+        SQL_PARAM_INPUT, SQL_C_BIT, SQL_INTEGER, 0,0,
+        &comment.get_is_valid() , 0, NULL);
     if(connectionPool->checkError(retcode, stmt, SQL_HANDLE_STMT)){
         return 2;
     }
